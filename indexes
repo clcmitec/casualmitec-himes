@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShiftManager Pro</title>
+    <style>
+        :root {
+            --primary: #4285F4; /* AppSheet Blue */
+            --secondary: #26C6DA; /* Slice Teal */
+            --accent: #FF7043; /* View Orange */
+            --bg: #F4F6F8;
+            --text: #333;
+            --sidebar-width: 250px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+        body { display: flex; height: 100vh; background-color: var(--bg); color: var(--text); }
+
+        /* Sidebar - Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .brand { font-size: 1.5rem; font-weight: bold; color: var(--primary); margin-bottom: 40px; }
+        
+        .nav-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.2s;
+            color: #555;
+        }
+        .nav-item:hover, .nav-item.active { background-color: #e8f0fe; color: var(--primary); font-weight: 600; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { font-size: 1.8rem; }
+        
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn:hover { background-color: #3367d6; }
+
+        /* KPI Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card h3 { color: #888; font-size: 0.9rem; margin-bottom: 10px; }
+        .card .number { font-size: 2rem; font-weight: bold; color: var(--text); }
+
+        /* Filters (Mimicking Slices) */
+        .filter-bar { margin-bottom: 20px; display: flex; gap: 10px; }
+        .filter-chip {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .filter-chip.active { background-color: var(--secondary); color: white; border-color: var(--secondary); }
+
+        /* Table */
+        .table-container { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #fafafa; color: #666; font-weight: 600; }
+        
+        /* Status Badges */
+        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .badge.assigned { background-color: #e6fffa; color: #00b894; }
+        .badge.open { background-color: #fff4e5; color: var(--accent); }
+        .badge.unavailable { background-color: #ffebee; color: #ef5350; }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">ShiftManager</div>
+        <div class="nav-item active" onclick="loadView('schedule')">Shift Schedule</div>
+        <div class="nav-item" onclick="loadView('staff')">Staff Directory</div>
+        <div class="nav-item" onclick="loadView('requests')">Approvals (3)</div>
+        <div class="nav-item" onclick="loadView('reports')">Reports</div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1 id="page-title">Shift Schedule</h1>
+            <button class="btn" onclick="alert('Opens Add Shift Modal')">+ New Shift</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="card">
+                <h3>Open Shifts</h3>
+                <div class="number" style="color: var(--accent)">4</div>
+            </div>
+            <div class="card">
+                <h3>Staff On-Duty</h3>
+                <div class="number" style="color: var(--primary)">12</div>
+            </div>
+            <div class="card">
+                <h3>Pending Trades</h3>
+                <div class="number">2</div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-chip active" onclick="filterData('all', this)">All Shifts</div>
+            <div class="filter-chip" onclick="filterData('Open', this)">Open for Grabs</div>
+            <div class="filter-chip" onclick="filterData('Assigned', this)">Assigned</div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Role</th>
+                        <th>Staff Member</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 1. MOCK DATABASE (Represents the Blue Squares in your diagram)
+        const db_shifts = [
+            { id: 1, date: '2023-10-25', time: '09:00 - 17:00', role: 'Manager', staff: 'Sarah Connor', status: 'Assigned' },
+            { id: 2, date: '2023-10-25', time: '09:00 - 17:00', role: 'Cashier', staff: '-', status: 'Open' },
+            { id: 3, date: '2023-10-26', time: '12:00 - 20:00', role: 'Stock', staff: 'John Smith', status: 'Assigned' },
+            { id: 4, date: '2023-10-26', time: '12:00 - 20:00', role: 'Cashier', staff: '-', status: 'Open' },
+            { id: 5, date: '2023-10-27', time: '09:00 - 17:00', role: 'Manager', staff: 'Sarah Connor', status: 'Unavailable' },
+        ];
+
+        // 2. RENDER FUNCTION (Represents the Orange Circles/Views)
+        function renderTable(data) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = ''; // Clear current
+
+            data.forEach(row => {
+                // Determine badge color
+                let badgeClass = '';
+                if(row.status === 'Assigned') badgeClass = 'assigned';
+                else if(row.status === 'Open') badgeClass = 'open';
+                else badgeClass = 'unavailable';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.date}</td>
+                    <td>${row.time}</td>
+                    <td>${row.role}</td>
+                    <td>${row.staff}</td>
+                    <td><span class="badge ${badgeClass}">${row.status}</span></td>
+                    <td><a href="#" style="color:var(--primary); text-decoration:none; font-weight:600;">Edit</a></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 3. SLICE LOGIC (Represents Teal Diamonds)
+        function filterData(criteria, element) {
+            // Update UI buttons
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            element.classList.add('active');
+
+            // Filter Data
+            if (criteria === 'all') {
+                renderTable(db_shifts);
+            } else {
+                const filtered = db_shifts.filter(item => item.status === criteria);
+                renderTable(filtered);
+            }
+        }
+
+        // Initial Load
+        renderTable(db_shifts);
+
+        // Simple Nav Handling
+        function loadView(viewName) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('page-title').innerText = viewName.charAt(0).toUpperCase() + viewName.slice(1);
+        }
+    </script>
+</body>
+</html>
