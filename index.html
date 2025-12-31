@@ -3,206 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShiftManager Pro</title>
+    <title>ShiftManager (Custom Build)</title>
     <style>
+        /* --- CSS STYLES --- */
         :root {
-            --primary: #4285F4; /* AppSheet Blue */
-            --secondary: #26C6DA; /* Slice Teal */
-            --accent: #FF7043; /* View Orange */
-            --bg: #F4F6F8;
-            --text: #333;
-            --sidebar-width: 250px;
+            --primary: #2563eb;    /* Similar to Blue Squares */
+            --secondary: #0d9488;  /* Similar to Teal Slices */
+            --accent: #f97316;     /* Similar to Orange Views */
+            --bg: #f1f5f9;
+            --text: #1e293b;
+            --white: #ffffff;
+            --danger: #ef4444;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-
-        body { display: flex; height: 100vh; background-color: var(--bg); color: var(--text); }
-
-        /* Sidebar - Navigation */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: white;
-            border-right: 1px solid #ddd;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
-
-        .brand { font-size: 1.5rem; font-weight: bold; color: var(--primary); margin-bottom: 40px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; }
         
-        .nav-item {
-            padding: 12px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: 0.2s;
-            color: #555;
-        }
-        .nav-item:hover, .nav-item.active { background-color: #e8f0fe; color: var(--primary); font-weight: 600; }
-
-        /* Main Content */
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .header h1 { font-size: 1.8rem; }
+        /* Layout */
+        .sidebar { width: 260px; background: var(--white); border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 1.5rem; }
+        .main { flex: 1; padding: 2rem; overflow-y: auto; }
         
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        .btn:hover { background-color: #3367d6; }
+        /* Sidebar Components */
+        .brand { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 2rem; display: flex; align-items: center; gap: 10px; }
+        .nav-btn { background: none; border: none; padding: 12px; text-align: left; width: 100%; cursor: pointer; border-radius: 8px; color: #64748b; font-weight: 500; transition: 0.2s; margin-bottom: 5px; }
+        .nav-btn:hover { background-color: #eff6ff; color: var(--primary); }
+        .nav-btn.active { background-color: #eff6ff; color: var(--primary); font-weight: 700; }
 
-        /* KPI Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .card h3 { color: #888; font-size: 0.9rem; margin-bottom: 10px; }
-        .card .number { font-size: 2rem; font-weight: bold; color: var(--text); }
-
-        /* Filters (Mimicking Slices) */
-        .filter-bar { margin-bottom: 20px; display: flex; gap: 10px; }
-        .filter-chip {
-            padding: 8px 16px;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-        .filter-chip.active { background-color: var(--secondary); color: white; border-color: var(--secondary); }
-
-        /* Table */
-        .table-container { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #fafafa; color: #666; font-weight: 600; }
+        /* Components */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
         
-        /* Status Badges */
-        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-        .badge.assigned { background-color: #e6fffa; color: #00b894; }
-        .badge.open { background-color: #fff4e5; color: var(--accent); }
-        .badge.unavailable { background-color: #ffebee; color: #ef5350; }
+        /* Cards & Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .card { background: var(--white); padding: 1.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 5px solid transparent; }
+        
+        /* Status Indicators (Mimicking Slices) */
+        .card.status-open { border-left-color: var(--secondary); }
+        .card.status-assigned { border-left-color: var(--primary); }
+        .card.status-unavailable { border-left-color: var(--danger); }
+
+        .tag { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .tag-open { background: #ccfbf1; color: var(--secondary); }
+        .tag-assigned { background: #dbeafe; color: var(--primary); }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 400px; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
+
+        /* Screen Visibility */
+        .screen { display: none; }
+        .screen.active { display: block; }
 
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="brand">ShiftManager</div>
-        <div class="nav-item active" onclick="loadView('schedule')">Shift Schedule</div>
-        <div class="nav-item" onclick="loadView('staff')">Staff Directory</div>
-        <div class="nav-item" onclick="loadView('requests')">Approvals (3)</div>
-        <div class="nav-item" onclick="loadView('reports')">Reports</div>
+        <div class="brand">
+            <span>⚡ ShiftApp</span>
+        </div>
+        <button class="nav-btn active" onclick="router('dashboard')">Dashboard</button>
+        <button class="nav-btn" onclick="router('schedule')">Shift Schedule</button>
+        <button class="nav-btn" onclick="router('staff')">Staff Directory</button>
+        <button class="nav-btn" onclick="router('requests')">Trade Requests</button>
     </div>
 
-    <div class="main-content">
-        <div class="header">
-            <h1 id="page-title">Shift Schedule</h1>
-            <button class="btn" onclick="alert('Opens Add Shift Modal')">+ New Shift</button>
+    <div class="main">
+        
+        <div id="dashboard" class="screen active">
+            <div class="header">
+                <h1>Overview</h1>
+                <button class="btn btn-primary" onclick="openModal()">+ New Shift</button>
+            </div>
+            <div class="grid">
+                <div class="card">
+                    <h3>Open Shifts</h3>
+                    <h1 id="stat-open" style="color: var(--secondary); font-size: 3rem;">0</h1>
+                    <p>Needs coverage</p>
+                </div>
+                <div class="card">
+                    <h3>Active Staff</h3>
+                    <h1 id="stat-staff" style="color: var(--primary); font-size: 3rem;">0</h1>
+                    <p>Registered in system</p>
+                </div>
+            </div>
         </div>
 
-        <div class="stats-grid">
-            <div class="card">
-                <h3>Open Shifts</h3>
-                <div class="number" style="color: var(--accent)">4</div>
+        <div id="schedule" class="screen">
+            <div class="header">
+                <h1>Shift Schedule</h1>
+                <div>
+                    <button class="btn" onclick="renderSchedule('all')">All</button>
+                    <button class="btn" onclick="renderSchedule('Open')">Open Only</button>
+                </div>
             </div>
-            <div class="card">
-                <h3>Staff On-Duty</h3>
-                <div class="number" style="color: var(--primary)">12</div>
-            </div>
-            <div class="card">
-                <h3>Pending Trades</h3>
-                <div class="number">2</div>
-            </div>
+            <div id="shift-grid" class="grid">
+                </div>
         </div>
 
-        <div class="filter-bar">
-            <div class="filter-chip active" onclick="filterData('all', this)">All Shifts</div>
-            <div class="filter-chip" onclick="filterData('Open', this)">Open for Grabs</div>
-            <div class="filter-chip" onclick="filterData('Assigned', this)">Assigned</div>
+        <div id="staff" class="screen">
+            <div class="header"><h1>Staff Directory</h1></div>
+            <div id="staff-grid" class="grid">
+                </div>
         </div>
 
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Role</th>
-                        <th>Staff Member</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body">
-                    </tbody>
-            </table>
+        <div id="requests" class="screen">
+            <div class="header"><h1>Trade Requests</h1></div>
+            <p>No pending approvals found.</p>
+        </div>
+
+    </div>
+
+    <div id="shiftModal" class="modal">
+        <div class="modal-content">
+            <h2>Create New Shift</h2>
+            <form onsubmit="addShift(event)">
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="newRole" required>
+                        <option value="Cashier">Cashier</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Stock">Stock</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="newDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Assign To (Optional)</label>
+                    <select id="newAssignee">
+                        <option value="">-- Open Shift --</option>
+                        </select>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex:1">Save</button>
+                    <button type="button" class="btn" onclick="closeModal()" style="background:#e2e8f0; flex:1">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        // 1. MOCK DATABASE (Represents the Blue Squares in your diagram)
-        const db_shifts = [
-            { id: 1, date: '2023-10-25', time: '09:00 - 17:00', role: 'Manager', staff: 'Sarah Connor', status: 'Assigned' },
-            { id: 2, date: '2023-10-25', time: '09:00 - 17:00', role: 'Cashier', staff: '-', status: 'Open' },
-            { id: 3, date: '2023-10-26', time: '12:00 - 20:00', role: 'Stock', staff: 'John Smith', status: 'Assigned' },
-            { id: 4, date: '2023-10-26', time: '12:00 - 20:00', role: 'Cashier', staff: '-', status: 'Open' },
-            { id: 5, date: '2023-10-27', time: '09:00 - 17:00', role: 'Manager', staff: 'Sarah Connor', status: 'Unavailable' },
+        /* --- 1. DATA MODELS (Mimicking Tables) --- */
+        // We use LocalStorage so data persists on refresh
+        
+        const defaultStaff = [
+            { id: 1, name: 'Alice Walker', role: 'Manager' },
+            { id: 2, name: 'Bob Smith', role: 'Cashier' },
+            { id: 3, name: 'Charlie Day', role: 'Stock' }
         ];
 
-        // 2. RENDER FUNCTION (Represents the Orange Circles/Views)
-        function renderTable(data) {
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = ''; // Clear current
+        const defaultShifts = [
+            { id: 101, role: 'Manager', date: '2023-11-01', assignee: 'Alice Walker', status: 'Assigned' },
+            { id: 102, role: 'Cashier', date: '2023-11-01', assignee: '', status: 'Open' },
+            { id: 103, role: 'Stock', date: '2023-11-02', assignee: 'Charlie Day', status: 'Assigned' }
+        ];
 
-            data.forEach(row => {
-                // Determine badge color
-                let badgeClass = '';
-                if(row.status === 'Assigned') badgeClass = 'assigned';
-                else if(row.status === 'Open') badgeClass = 'open';
-                else badgeClass = 'unavailable';
+        // Initialize Data
+        let staff = JSON.parse(localStorage.getItem('staff')) || defaultStaff;
+        let shifts = JSON.parse(localStorage.getItem('shifts')) || defaultShifts;
 
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row.date}</td>
-                    <td>${row.time}</td>
-                    <td>${row.role}</td>
-                    <td>${row.staff}</td>
-                    <td><span class="badge ${badgeClass}">${row.status}</span></td>
-                    <td><a href="#" style="color:var(--primary); text-decoration:none; font-weight:600;">Edit</a></td>
-                `;
-                tbody.appendChild(tr);
-            });
+        function saveData() {
+            localStorage.setItem('staff', JSON.stringify(staff));
+            localStorage.setItem('shifts', JSON.stringify(shifts));
+            updateUI();
         }
 
-        // 3. SLICE LOGIC (Represents Teal Diamonds)
-        function filterData(criteria, element) {
-            // Update UI buttons
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            element.classList.add('active');
+        /* --- 2. LOGIC & SLICES (Mimicking Teal Diamonds) --- */
+        
+        function getOpenShifts() {
+            return shifts.filter(s => s.status === 'Open');
+        }
 
-            // Filter Data
-            if (criteria === 'all') {
-                renderTable(db_shifts);
-            } else {
-                const filtered = db_shifts.filter(item => item.status === criteria);
-                renderTable(filtered);
+        function assignShift(shiftId, staffName) {
+            const shift = shifts.find(s => s.id === shiftId);
+            if(shift) {
+                shift.assignee = staffName;
+                shift.status = 'Assigned';
+                saveData();
             }
         }
 
-        // Initial Load
-        renderTable(db_shifts);
+        function addShift(e) {
+            e.preventDefault();
+            const role = document.getElementById('newRole').value;
+            const date = document.getElementById('newDate').value;
+            const assignee = document.getElementById('newAssignee').value;
+            
+            const newShift = {
+                id: Date.now(), // simple unique ID
+                role: role,
+                date: date,
+                assignee: assignee || '',
+                status: assignee ? 'Assigned' : 'Open'
+            };
 
-        // Simple Nav Handling
-        function loadView(viewName) {
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('page-title').innerText = viewName.charAt(0).toUpperCase() + viewName.slice(1);
+            shifts.push(newShift);
+            saveData();
+            closeModal();
+            router('schedule');
         }
+
+        /* --- 3. VIEW CONTROLLERS (Mimicking Orange Views) --- */
+
+        function router(viewName) {
+            // Update Sidebar
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active'); // Warning: simplified target handling
+
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            // Show target screen
+            document.getElementById(viewName).classList.add('active');
+            
+            updateUI(); // Refresh data on view change
+        }
+
+        function updateUI() {
+            // Update Dashboard Stats
+            document.getElementById('stat-open').innerText = getOpenShifts().length;
+            document.getElementById('stat-staff').innerText = staff.length;
+
+            // Render Schedule
+            renderSchedule('all');
+            
+            // Render Staff Directory
+            const staffContainer = document.getElementById('staff-grid');
+            staffContainer.innerHTML = staff.map(s => `
+                <div class="card">
+                    <div style="font-weight:bold; font-size:1.1rem;">${s.name}</div>
+                    <div style="color:#64748b;">${s.role}</div>
+                </div>
+            `).join('');
+
+            // Populate Modal Dropdown
+            const select = document.getElementById('newAssignee');
+            select.innerHTML = '<option value="">-- Open Shift --</option>' + 
+                staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        }
+
+        function renderSchedule(filter) {
+            const container = document.getElementById('shift-grid');
+            let data = shifts;
+            if(filter === 'Open') data = getOpenShifts();
+
+            container.innerHTML = data.map(s => `
+                <div class="card status-${s.status.toLowerCase()}">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span class="tag tag-${s.status.toLowerCase()}">${s.status}</span>
+                        <span style="color:#64748b; font-size:0.9rem;">${s.date}</span>
+                    </div>
+                    <h3 style="margin:0 0 5px 0;">${s.role}</h3>
+                    <p style="color:#64748b; margin:0;">
+                        ${s.assignee ? '👤 ' + s.assignee : '⚠️ Unassigned'}
+                    </p>
+                    ${s.status === 'Open' ? `<button onclick="quickAssign(${s.id})" style="margin-top:10px; width:100%; padding:5px; cursor:pointer;">Grab Shift</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function quickAssign(id) {
+            const who = prompt("Enter staff name to assign:");
+            if(who) assignShift(id, who);
+        }
+
+        // Modal Handling
+        function openModal() { document.getElementById('shiftModal').classList.add('show'); }
+        function closeModal() { document.getElementById('shiftModal').classList.remove('show'); }
+
+        // Initial Boot
+        updateUI();
+
     </script>
 </body>
 </html>
